@@ -2,6 +2,8 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const bcrypt = require('bcryptjs');
 const { addUser } = require('../../database');
 
+const LOG_CHANNEL_ID = '1516531922707152947';
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('add-user')
@@ -37,6 +39,14 @@ module.exports = {
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
             addUser(email, hashedPassword, tier);
+
+            try {
+                const logChannel = await interaction.client.channels.fetch(LOG_CHANNEL_ID);
+                await logChannel.send(`📋 New **${tier}** user added: \`${email}\``);
+            } catch (logError) {
+                console.error('Failed to send log message:', logError);
+            }
+
             await interaction.editReply({
                 content: `✅ User **${email}** added with **${tier}** tier.`
             });
